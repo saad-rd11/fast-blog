@@ -1,0 +1,44 @@
+# Python-generated files
+__pycache__/
+*.py[oc]
+build/
+dist/
+wheels/
+*.egg-info
+
+# --- Python environment ---
+*$py.class
+.venv/
+env/
+venv/
+ENV/
+
+# --- uv (Package Manager) ---
+# We keep uv.lock and pyproject.toml, but ignore the tool's cache if any
+.uv/
+
+# --- Database ---
+# It's usually best to ignore the local SQLite DB to avoid overwriting data
+*.db
+*.sqlite3
+
+# --- User Uploads / Media ---
+# Ignore uploaded profile pictures but keep the directory structure
+media/profile_pics/*
+!media/profile_pics/default.jpg
+static/profile_pics/*
+!static/profile_pics/default.jpg
+
+# --- Environment Variables ---
+.env
+.flaskenv
+
+# --- OS / IDE Specific ---
+.DS_Store
+.vscode/
+.idea/
+*.swp
+
+# --- Project specific ---
+.python-version
+snippets.txt

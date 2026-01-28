@@ -1,0 +1,47 @@
+{% extends "layout.html" %}
+
+{% block content %}
+  <div class="content-section mb-4 p-4 border-bottom">
+    <div class="d-flex align-items-center gap-4">
+      <img class="rounded-circle account-img" 
+           src="{{ user.image_path }}" 
+           alt="{{ user.username }}"
+           width="100" height="100">
+      <div>
+        <h1 class="mb-1">Posts by {{ user.username }}</h1>
+        <p class="text-secondary mb-0">Total Posts: {{ posts|length }}</p>
+      </div>
+    </div>
+  </div>
+
+  {% for post in posts %}
+    <article class="content-section py-3 px-4 mb-4">
+      <div class="d-flex align-items-start gap-4">
+        <img class="rounded-circle article-img flex-shrink-0"
+             src="{{ post.author.image_path }}"
+             alt="{{ post.author.username }}'s profile picture"
+             width="64" height="64"
+             loading="lazy">
+        <div class="flex-grow-1">
+          <div class="article-metadata mb-2 pb-1 border-bottom">
+            <span class="fw-bold me-2">{{ post.author.username }}</span>
+            <small class="text-body-secondary">
+              {{ post.date_posted.strftime('%B %d, %Y') }}
+            </small>
+          </div>
+          <h2>
+            <a class="article-title text-decoration-none" 
+               href="{{ url_for('post-for', post_id=post.id) }}">
+               {{ post.title }}
+            </a>
+          </h2>
+          <p class="article-content text-break">{{ post.content }}</p>
+        </div>
+      </div>
+    </article>
+  {% else %}
+    <div class="alert alert-info">
+      This user hasn't posted anything yet.
+    </div>
+  {% endfor %}
+{% endblock content %}
