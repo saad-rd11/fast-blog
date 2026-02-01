@@ -41,7 +41,8 @@ app.include_router(posts.router, prefix='/api/posts', tags=['posts'])
 @app.get('/post', include_in_schema=False, name='root')
 @app.get("/", include_in_schema=False, name='home')
 async def home(request: Request, db: Annotated[AsyncSession, Depends(get_db)]):
-    results = await db.execute(select(models.Post).options(selectinload(models.Post.author)))
+    results = await db.execute(select(models.Post).options(selectinload(models.Post.author)).order_by(models.Post.date_posted.desc())
+)
     
     posts = results.scalars().all() 
     
@@ -79,6 +80,8 @@ async def user_posts_page(
         select(models.User)
         .options(selectinload(models.User.posts))
         .where(models.User.id == user_id)
+        .order_by(models.Post.date_posted.desc())
+
     )
     
     found_user = results.scalars().first()

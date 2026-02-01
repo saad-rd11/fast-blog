@@ -100,6 +100,7 @@ async def get_posts(db: Annotated[AsyncSession, Depends(get_db)]):
     results = await db.execute(
         select(models.Post)
         .options(selectinload(models.Post.author))
+        .order_by(models.Post.date_posted.desc())
     )
     posts = results.scalars().all()
     return posts

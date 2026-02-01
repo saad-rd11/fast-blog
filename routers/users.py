@@ -55,6 +55,7 @@ async def get_user_posts(user_id: int, db: Annotated[AsyncSession, Depends(get_d
         select(models.User)
         .options(selectinload(models.User.posts))
         .where(models.User.id == user_id)
+        .order_by(models.Post.date_posted.desc())
     )
     found_user = result.scalars().first()
     if found_user:
