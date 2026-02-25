@@ -1,0 +1,74 @@
+{% extends "layout.html" %}
+{% block content %}
+  <div class="content-section py-4 px-4 mb-4">
+    <form id="loginForm">
+      <fieldset class="form-group">
+        <legend class="border-bottom mb-4">Log In</legend>
+        <div class="mb-3">
+          <label for="username" class="form-label">Username</label>
+          <input type="text"
+                 class="form-control"
+                 id="username"
+                 name="username"
+                 required
+                 autofocus
+                 minlength="1"
+                 maxlength="50">
+        </div>
+        <div class="mb-3">
+          <label for="password" class="form-label">Password</label>
+          <input type="password"
+                 class="form-control"
+                 id="password"
+                 name="password"
+                 required>
+        </div>
+        <div id="loginError" class="alert alert-danger d-none" role="alert"></div>
+      </fieldset>
+      <div class="form-group mt-3">
+        <button type="submit" class="btn btn-primary">Log In</button>
+      </div>
+    </form>
+    <div class="border-top pt-3 mt-4">
+      <small class="text-body-secondary">
+        Don't have an account? <a class="ms-1" href="{{ url_for('register') }}">Register here</a>
+      </small>
+    </div>
+  </div>
+{% endblock content %}
+
+{% block scripts %}
+<script type="module">
+import { getErrorMessage } from '/static/js/utils.js';
+
+const loginForm = document.getElementById('loginForm');
+const loginError = document.getElementById('loginError');
+
+loginForm.addEventListener('submit', async (event) => {
+  event.preventDefault();
+  loginError.classList.add('d-none');
+
+  const formData = new FormData(loginForm);
+  const data = Object.fromEntries(formData.entries());
+
+  try {
+    const response = await fetch('/api/auth/login', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data),
+    });
+
+    if (response.ok) {
+      window.location.href = '/';
+    } else {
+      const error = await response.json();
+      loginError.textContent = getErrorMessage(error);
+      loginError.classList.remove('d-none');
+    }
+  } catch (err) {
+    loginError.textContent = 'Network error. Please check your connection and try again.';
+    loginError.classList.remove('d-none');
+  }
+});
+</script>
+{% endblock scripts %}

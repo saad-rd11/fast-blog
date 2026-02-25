@@ -1,0 +1,106 @@
+{% extends "layout.html" %}
+{% block content %}
+  <div class="content-section py-4 px-4 mb-4">
+    <form id="registerForm">
+      <fieldset class="form-group">
+        <legend class="border-bottom mb-4">Create Account</legend>
+        <div class="mb-3">
+          <label for="username" class="form-label">Username</label>
+          <input type="text"
+                 class="form-control"
+                 id="username"
+                 name="username"
+                 required
+                 autofocus
+                 minlength="1"
+                 maxlength="50">
+        </div>
+        <div class="mb-3">
+          <label for="email" class="form-label">Email</label>
+          <input type="email"
+                 class="form-control"
+                 id="email"
+                 name="email"
+                 required
+                 maxlength="200">
+        </div>
+        <div class="mb-3">
+          <label for="password" class="form-label">Password</label>
+          <input type="password"
+                 class="form-control"
+                 id="password"
+                 name="password"
+                 required
+                 minlength="8"
+                 maxlength="128">
+          <div class="form-text">Must be at least 8 characters.</div>
+        </div>
+        <div class="mb-3">
+          <label for="confirmPassword" class="form-label">Confirm Password</label>
+          <input type="password"
+                 class="form-control"
+                 id="confirmPassword"
+                 name="confirmPassword"
+                 required
+                 minlength="8"
+                 maxlength="128">
+        </div>
+        <div id="registerError" class="alert alert-danger d-none" role="alert"></div>
+      </fieldset>
+      <div class="form-group mt-3">
+        <button type="submit" class="btn btn-primary">Register</button>
+      </div>
+    </form>
+    <div class="border-top pt-3 mt-4">
+      <small class="text-body-secondary">
+        Already have an account? <a class="ms-1" href="{{ url_for('login') }}">Log in here</a>
+      </small>
+    </div>
+  </div>
+{% endblock content %}
+
+{% block scripts %}
+<script type="module">
+import { getErrorMessage } from '/static/js/utils.js';
+
+const registerForm = document.getElementById('registerForm');
+const registerError = document.getElementById('registerError');
+
+registerForm.addEventListener('submit', async (event) => {
+  event.preventDefault();
+  registerError.classList.add('d-none');
+
+  const formData = new FormData(registerForm);
+  const data = Object.fromEntries(formData.entries());
+
+  // Client-side password match check
+  if (data.password !== data.confirmPassword) {
+    registerError.textContent = 'Passwords do not match.';
+    registerError.classList.remove('d-none');
+    return;
+  }
+
+  // Remove confirmPassword before sending
+  delete data.confirmPassword;
+
+  try {
+    const response = await fetch('/api/auth/register', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data),
+    });
+
+    if (response.ok) {
+      window.location.href = '/';
+    } else {
+      const error = await response.json();
+      registerError.textContent = getErrorMessage(error);
+      registerError.classList.remove('d-none');
+    }
+  } catch (err) {
+    registerError.textContent = 'Network error. Please check your connection and try again.';
+    registerError.classList.remove('d-none');
+  }
+});
+</script>
+{% endblock scripts %}

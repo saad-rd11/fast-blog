@@ -15,9 +15,8 @@
         </div>
         <h2 class="article-title">{{ post.title }}</h2>
         <p class="article-content">{{ post.content }}</p>
-        <!-- Only show edit/delete options if the user is the author -->
-        <!-- TODO: Add user authentication and authorization -->
-        {% if post.user_id == 1 %}
+        <!-- Only show edit/delete options if the current user is the author or an admin -->
+        {% if current_user and (current_user.id == post.user_id or current_user.is_admin) %}
           <div class="post-actions mt-3 pt-3 border-top">
             <button type="button"
                     class="btn btn-outline-secondary me-1"
@@ -29,52 +28,54 @@
                     data-bs-target="#deleteModal">Delete Post</button>
           </div>
         {% endif %}
-        <!-- TODO: Add user authentication and authorization -->
       </div>
     </div>
   </article>
-  <div class="modal fade" 
-      id="editModal" 
-      tabindex="-1" 
-      aria-labelledby="editModalLabel" 
+
+  {% if current_user and (current_user.id == post.user_id or current_user.is_admin) %}
+  <!-- Edit Modal -->
+  <div class="modal fade"
+      id="editModal"
+      tabindex="-1"
+      aria-labelledby="editModalLabel"
       aria-hidden="true">
     <div class="modal-dialog">
       <div class="modal-content">
         <div class="modal-header">
           <h5 class="modal-title" id="editModalLabel">Edit Post</h5>
-          <button type="button" 
-                  class="btn-close" 
-                  data-bs-dismiss="modal" 
+          <button type="button"
+                  class="btn-close"
+                  data-bs-dismiss="modal"
                   aria-label="Close"></button>
         </div>
-        
+
         <form id="editPostForm">
           <div class="modal-body">
             <input type="hidden" name="post_id" value="{{ post.id }}">
-            
+
             <div class="mb-3">
               <label for="editTitle" class="form-label">Title</label>
-              <input type="text" 
-                    class="form-control" 
-                    id="editTitle" 
-                    name="title" 
-                    value="{{ post.title }}" 
+              <input type="text"
+                    class="form-control"
+                    id="editTitle"
+                    name="title"
+                    value="{{ post.title }}"
                     required>
             </div>
-            
+
             <div class="mb-3">
               <label for="editContent" class="form-label">Content</label>
-              <textarea class="form-control" 
-                        id="editContent" 
-                        name="content" 
-                        rows="5" 
+              <textarea class="form-control"
+                        id="editContent"
+                        name="content"
+                        rows="5"
                         required>{{ post.content }}</textarea>
             </div>
           </div>
-          
+
           <div class="modal-footer">
-            <button type="button" 
-                    class="btn btn-outline-secondary" 
+            <button type="button"
+                    class="btn btn-outline-secondary"
                     data-bs-dismiss="modal">Cancel</button>
             <button type="submit" class="btn btn-primary">Save Changes</button>
           </div>
@@ -109,9 +110,11 @@
           </div>
       </div>
   </div>
+  {% endif %}
 {% endblock content %}
 
 {% block scripts %}
+{% if current_user and (current_user.id == post.user_id or current_user.is_admin) %}
 <script type="module">
 import {
     getErrorMessage,
@@ -125,18 +128,13 @@ const postId = {{ post.id }};
 // Edit Post Form Handler
 const editForm = document.getElementById("editPostForm");
 editForm.addEventListener("submit", async (event) => {
-    // Stop default form submission - we'll handle it with JavaScript
     event.preventDefault();
 
-    // Gather form values into a plain object
     const formData = new FormData(editForm);
     const postData = Object.fromEntries(formData.entries());
-
-    // Remove post_id from data (it's in the URL, not the body)
     delete postData.post_id;
 
     try {
-        // PATCH for partial update (just title and content, not user_id)
         const response = await fetch(`/api/posts/${postId}`, {
             method: "PATCH",
             headers: {
@@ -161,6 +159,13 @@ editForm.addEventListener("submit", async (event) => {
                     },
                     { once: true },
                 );
+        } else if (response.status === 401) {
+            window.location.href = '/login';
+        } else if (response.status === 403) {
+            document.getElementById("errorMessage").textContent =
+                "You don't have permission to edit this post.";
+            hideModal("editModal");
+            showModal("errorModal");
         } else {
             const error = await response.json();
             document.getElementById("errorMessage").textContent =
@@ -180,15 +185,19 @@ editForm.addEventListener("submit", async (event) => {
 const deleteButton = document.getElementById("confirmDelete");
 deleteButton.addEventListener("click", async () => {
     try {
-        // DELETE request - no body needed, post_id is in the URL
         const response = await fetch(`/api/posts/${postId}`, {
             method: "DELETE",
         });
 
-        // 204 = No Content (success)
         if (response.status === 204) {
-            // Post is gone, redirect to home page
             window.location.href = "/";
+        } else if (response.status === 401) {
+            window.location.href = '/login';
+        } else if (response.status === 403) {
+            document.getElementById("errorMessage").textContent =
+                "You don't have permission to delete this post.";
+            hideModal("deleteModal");
+            showModal("errorModal");
         } else {
             const error = await response.json();
             document.getElementById("errorMessage").textContent =
@@ -204,4 +213,5 @@ deleteButton.addEventListener("click", async () => {
     }
 });
 </script>
+{% endif %}
 {% endblock scripts %}
